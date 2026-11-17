@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#09090b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>ShaVerse — Creative Suite OS</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./logo.png" />
+  <link rel="apple-touch-icon" href="./logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;900&family=Noto+Sans+Tamil:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <!-- Google Identity Services for Drive Sync -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div id="app" class="sv-app" data-mode="studio">
+    <!-- TOP HEADER BAR -->
+    <header class="sv-topbar">
+      <div class="sv-topbar-left">
+        <button id="btn-projects" class="sv-icon-btn" title="Projects & Home">
+          <img src="./logo.png" alt="ShaVerse" class="sv-logo-mini" />
+        </button>
+        <div class="sv-project-meta">
+          <input id="project-title" type="text" value="Untitled Masterpiece" aria-label="Project Name" />
+          <span id="save-status" class="sv-badge-saved">● Saved Locally</span>
+        </div>
+      </div>
+
+      <!-- 3-IN-1 ENGINE MODE SWITCHER -->
+      <nav class="sv-mode-switcher" aria-label="Workspace Mode">
+        <button class="sv-mode-btn active" data-target-mode="studio">🎨 Studio</button>
+        <button class="sv-mode-btn" data-target-mode="pixel">🪄 Pixel/Vector</button>
+        <button class="sv-mode-btn" data-target-mode="timeline">🎬 Timeline</button>
+      </nav>
+
+      <div class="sv-topbar-right">
+        <button id="btn-undo" class="sv-icon-btn" title="Undo (2-Finger Tap)">↩️</button>
+        <button id="btn-redo" class="sv-icon-btn" title="Redo (3-Finger Tap)">↪️</button>
+        <button id="btn-ghost-toggle" class="sv-icon-btn" title="Ghost Precision Trackpad">🕹️</button>
+        <button id="btn-drive-sync" class="sv-icon-btn sv-drive-btn" title="Google Drive Sync">☁️</button>
+        <button id="btn-export-open" class="sv-primary-btn">Export</button>
+      </div>
+    </header>
+
+    <!-- MAIN WORKSPACE BODY -->
+    <main class="sv-workspace">
+      <!-- DESKTOP LEFT TOOL RAIL (Hidden on Mobile, shown on Desktop) -->
+      <aside class="sv-left-rail" id="desktop-left-rail">
+        <button class="sv-rail-btn active" data-tool="select" title="Move / Transform">↖️<span>Select</span></button>
+        <button class="sv-rail-btn" data-tool="text" title="Typography Studio">🔤<span>Text</span></button>
+        <button class="sv-rail-btn" data-tool="media" title="Add Photo / Video / Audio">🖼️<span>Media</span></button>
+        <button class="sv-rail-btn" data-tool="shapes" title="Shapes & Elements">🔷<span>Elements</span></button>
+        <button class="sv-rail-btn" data-tool="pen" title="Bezier Pen & Vector">✒️<span>Pen</span></button>
+        <button class="sv-rail-btn" data-tool="brush" title="Brush & Mask Paint">🖌️<span>Brush</span></button>
+        <button class="sv-rail-btn" data-tool="retouch" title="Heal / Clone / Dodge / Liquify">🩹<span>Retouch</span></button>
+        <button class="sv-rail-btn" data-tool="lasso" title="Selection & Magic Wand">✂️<span>Select AI</span></button>
+        <button class="sv-rail-btn" data-tool="color" title="DaVinci Color & LUTs">🎡<span>Color</span></button>
+        <button class="sv-rail-btn" data-tool="brand" title="Brand Kit Vault">💼<span>Brand</span></button>
+      </aside>
+
+      <!-- CENTER VIEWPORT / STAGE -->
+      <section class="sv-stage-container" id="stage-container">
+        <!-- Quick Top Floating Canvas Controls -->
+        <div class="sv-stage-hud">
+          <button id="btn-canvas-size" class="sv-hud-pill">📐 1080 × 1920 (9:16)</button>
+          <button id="btn-guides-toggle" class="sv-hud-pill">⊞ Guides</button>
+          <button id="btn-scopes-toggle" class="sv-hud-pill">📊 Scopes</button>
+          <button id="btn-layers-mobile" class="sv-hud-pill">📚 Layers (<span id="layer-count">1</span>)</button>
+        </div>
+
+        <!-- Live Scopes Overlay (DaVinci Histogram / RGB Parade) -->
+        <div id="scopes-overlay" class="sv-scopes-box hidden">
+          <div class="sv-scopes-header">
+            <span>RGB Histogram / Luma</span>
+            <button id="btn-close-scopes">✕</button>
+          </div>
+          <canvas id="scopes-canvas" width="220" height="100"></canvas>
+        </div>
+
+        <!-- Interactive Zoom/Pan Canvas Wrapper -->
+        <div id="canvas-viewport" class="sv-canvas-viewport">
+          <div id="canvas-wrapper" class="sv-canvas-wrapper">
+            <canvas id="main-canvas" width="1080" height="1920"></canvas>
+            <canvas id="overlay-canvas" width="1080" height="1920"></canvas>
+          </div>
+        </div>
+
+        <!-- MOBILE GHOST TRACKPAD + ZOOM LOUPE -->
+        <div id="ghost-trackpad" class="sv-ghost-pad hidden">
+          <div class="sv-ghost-loupe">
+            <canvas id="loupe-canvas" width="100" height="100"></canvas>
+            <span id="ghost-coords">X: 540 Y: 960</span>
+          </div>
+          <div id="ghost-touch-area" class="sv-ghost-touch">
+            <span>Slide Thumb for 1px Precision • Tap to Click</span>
+          </div>
+          <button id="btn-ghost-close" class="sv-ghost-close">✕</button>
+        </div>
+
+        <!-- VIDEO TRANSPORT BAR (Visible in Timeline Mode or when Video exists) -->
+        <div class="sv-transport-bar" id="transport-bar">
+          <button id="btn-play-pause" class="sv-play-btn">▶️</button>
+          <span id="timecode-display" class="sv-timecode">00:00.00 / 00:15.00</span>
+          <div class="sv-transport-actions">
+            <button id="btn-split-clip" class="sv-mini-pill" title="Split at Playhead">✂️ Split</button>
+            <button id="btn-add-keyframe" class="sv-mini-pill" title="Add/Toggle Keyframe">◆ Keyframe</button>
+            <button id="btn-beat-sync" class="sv-mini-pill" title="Auto Detect Audio Beats">🎵 Beat Sync</button>
+          </div>
+        </div>
+
+        <!-- MULTI-TRACK TIMELINE DOCK (CapCut + After Effects + Audition) -->
+        <div class="sv-timeline-dock" id="timeline-dock">
+          <div class="sv-timeline-ruler" id="timeline-ruler">
+            <div id="playhead" class="sv-playhead">
+              <div class="sv-playhead-head"></div>
+              <div class="sv-playhead-line"></div>
+            </div>
+          </div>
+          <div class="sv-tracks-scroll" id="tracks-container">
+            <!-- Tracks dynamically injected by engine-color-video.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- DESKTOP RIGHT INSPECTOR & LAYERS PANEL -->
+      <aside class="sv-right-panel" id="desktop-right-panel">
+        <div class="sv-panel-tabs">
+          <button class="sv-ptab active" data-ptab="inspector">🎛️ Properties</button>
+          <button class="sv-ptab" data-ptab="layers">📚 Layers</button>
+        </div>
+        <div id="desktop-inspector-content" class="sv-panel-body"></div>
+        <div id="desktop-layers-content" class="sv-panel-body hidden"></div>
+      </aside>
+    </main>
+
+    <!-- CONTEXTUAL SLIDE-UP DRAWER (Mobile Pro Tool Inspector) -->
+    <section id="contextual-drawer" class="sv-drawer hidden">
+      <div class="sv-drawer-handle" id="drawer-handle">
+        <span id="drawer-title">Tool Settings</span>
+        <button id="btn-close-drawer" class="sv-drawer-close">Done ✓</button>
+      </div>
+      <div id="drawer-body" class="sv-drawer-body">
+        <!-- Dynamic contextual controls injected here -->
+      </div>
+    </section>
+
+    <!-- MOBILE CONTEXTUAL BOTTOM DOCK -->
+    <footer class="sv-bottom-dock" id="mobile-bottom-dock">
+      <!-- Dynamic buttons based on active Mode & Selected Layer -->
+    </footer>
+
+    <!-- HIDDEN FILE INPUTS -->
+    <input type="file" id="input-media" accept="image/*,video/*,audio/*" multiple hidden />
+    <input type="file" id="input-font" accept=".ttf,.otf,.woff,.woff2" hidden />
+    <input type="file" id="input-lut" accept=".cube" hidden />
+    <input type="file" id="input-project-import" accept=".shaverse,.json" hidden />
+
+    <!-- MODAL: PROJECTS & TEMPLATES HUB -->
+    <div id="modal-projects" class="sv-modal hidden">
+      <div class="sv-modal-card sv-modal-lg">
+        <div class="sv-modal-header">
+          <div class="sv-brand-title">
+            <img src="./logo.png" alt="Logo" />
+            <div>
+              <h2>ShaVerse Studio OS</h2>
+              <p>Offline-First Creative Suite • IndexedDB + Google Drive</p>
+            </div>
+          </div>
+          <button class="sv-close-modal" data-close="modal-projects">✕</button>
+        </div>
+        <div class="sv-modal-body">
+          <div class="sv-quick-starts">
+            <button class="sv-preset-card" data-w="1080" data-h="1920" data-mode="timeline">📱 Instagram Reel / TikTok<span>1080 × 1920 • 60fps</span></button>
+            <button class="sv-preset-card" data-w="1080" data-h="1080" data-mode="studio"> квадрат Instagram Post<span>1080 × 1080 • Design</span></button>
+            <button class="sv-preset-card" data-w="1920" data-h="1080" data-mode="timeline">🎬 YouTube / Cinema 16:9<span>1920 × 1080 • Pro</span></button>
+            <button class="sv-preset-card" data-w="5400" data-h="1350" data-mode="studio">🎠 5-Slide Carousel<span>5400 × 1350 • Panoramic</span></button>
+            <button class="sv-preset-card" data-w="2480" data-h="3508" data-mode="pixel">🖨️ A4 Print Poster<span>2480 × 3508 • 300 DPI</span></button>
+            <button class="sv-preset-card" id="btn-custom-canvas-modal">⚙️ Custom Canvas<span>Any px / mm / cm</span></button>
+          </div>
+          <div class="sv-saved-header">
+            <h3>Recent Local & Drive Projects</h3>
+            <div>
+              <button id="btn-import-json" class="sv-mini-pill">📂 Open .shaverse</button>
+              <button id="btn-pull-drive" class="sv-mini-pill">☁️ Load from Drive</button>
+            </div>
+          </div>
+          <div id="projects-grid" class="sv-projects-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: CANVAS RESIZE & MAGIC SWITCH -->
+    <div id="modal-canvas" class="sv-modal hidden">
+      <div class="sv-modal-card">
+        <div class="sv-modal-header">
+          <h3>📐 Canvas Size & Magic Switch</h3>
+          <button class="sv-close-modal" data-close="modal-canvas">✕</button>
+        </div>
+        <div class="sv-modal-body">
+          <div class="sv-form-row">
+            <label>Width (px)<input type="number" id="canvas-w-input" value="1080" min="16" max="8192" /></label>
+            <label>Height (px)<input type="number" id="canvas-h-input" value="1920" min="16" max="8192" /></label>
+          </div>
+          <div class="sv-form-row">
+            <label>Background<input type="color" id="canvas-bg-input" value="#111827" /></label>
+            <label>Transparent BG<input type="checkbox" id="canvas-transparent-input" /></label>
+          </div>
+          <label class="sv-checkbox-line">
+            <input type="checkbox" id="magic-switch-scale" checked />
+            <span>✨ <strong>Magic Switch:</strong> Proportionally scale & reposition all layers to fit new ratio</span>
+          </label>
+          <div class="sv-preset-pills">
+            <button type="button" class="sv-ratio-pill" data-w="1080" data-h="1920">9:16 Reel</button>
+            <button type="button" class="sv-ratio-pill" data-w="1080" data-h="1350">4:5 Portrait</button>
+            <button type="button" class="sv-ratio-pill" data-w="1080" data-h="1080">1:1 Square</button>
+            <button type="button" class="sv-ratio-pill" data-w="1920" data-h="1080">16:9 YouTube</button>
+            <button type="button" class="sv-ratio-pill" data-w="1050" data-h="600">Visiting Card</button>
+          </div>
+          <button id="btn-apply-canvas" class="sv-primary-btn sv-full-btn">Apply Canvas Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: GOOGLE DRIVE CLOUD VAULT -->
+    <div id="modal-drive" class="sv-modal hidden">
+      <div class="sv-modal-card">
+        <div class="sv-modal-header">
+          <h3>☁️ Google Drive Cloud Sync</h3>
+          <button class="sv-close-modal" data-close="modal-drive">✕</button>
+        </div>
+        <div class="sv-modal-body">
+          <p class="sv-muted">Use your existing Google Cloud Client ID (same as ShaFin) to sync projects, custom fonts, LUTs, and Brand Kit to <code>/ShaVerse/</code>.</p>
+          <label>Google OAuth Client ID
+            <input type="text" id="drive-client-id" placeholder="123456789-xxxxx.apps.googleusercontent.com" />
+          </label>
+          <div class="sv-btn-group">
+            <button id="btn-drive-connect" class="sv-primary-btn">🔗 Connect Google Drive</button>
+            <button id="btn-drive-backup-now" class="sv-secondary-btn">⬆️ Backup Current Project</button>
+          </div>
+          <div id="drive-status-log" class="sv-status-box">Not connected. Local IndexedDB auto-save is active.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: PRO EXPORT & CAROUSEL SLICER -->
+    <div id="modal-export" class="sv-modal hidden">
+      <div class="sv-modal-card">
+        <div class="sv-modal-header">
+          <h3>🚀 Export & Render Studio</h3>
+          <button class="sv-close-modal" data-close="modal-export">✕</button>
+        </div>
+        <div class="sv-modal-body">
+          <div class="sv-form-row">
+            <label>Format
+              <select id="export-format">
+                <option value="png">PNG (Lossless + Transparency)</option>
+                <option value="jpg">JPG (High Quality Image)</option>
+                <option value="webp">WebP (Ultra-Light Web)</option>
+                <option value="carousel">🎠 Instagram Carousel Slice (2–10 Slides)</option>
+                <option value="webm">🎬 Video Render (60 FPS WebM/MP4)</option>
+                <option value="shaverse">📦 .shaverse Project File (Full Layers)</option>
+              </select>
+            </label>
+            <label>Resolution Scale
+              <select id="export-scale">
+                <option value="1">1x (Original HD)</option>
+                <option value="2">2x (Ultra 4K)</option>
+                <option value="0.5">0.5x (Fast Proxy)</option>
+              </select>
+            </label>
+          </div>
+          <div id="carousel-options" class="sv-form-row hidden">
+            <label>Number of Slices (2 to 10)
+              <input type="number" id="carousel-slices" value="5" min="2" max="10" />
+            </label>
+          </div>
+          <label>Quality (JPG/WebP/Video): <span id="export-q-val">95%</span>
+            <input type="range" id="export-quality" min="50" max="100" value="95" />
+          </label>
+          <div id="export-progress-wrap" class="sv-progress-wrap hidden">
+            <div id="export-progress-bar" class="sv-progress-bar"></div>
+            <span id="export-progress-text">Rendering... 0%</span>
+          </div>
+          <div class="sv-btn-group">
+            <button id="btn-run-export" class="sv-primary-btn sv-full-btn">⬇️ Render & Download</button>
+            <button id="btn-export-to-drive" class="sv-secondary-btn">☁️ Save to Drive</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="sv-toast" class="sv-toast hidden"></div>
+  </div>
+
+  <!-- MODULAR ENGINE SCRIPTS -->
+  <script src="./core-storage.js"></script>
+  <script src="./engine-graphics.js"></script>
+  <script src="./engine-color-video.js"></script>
+</body>
+</html>
